@@ -1,3 +1,5 @@
+
+
 # GetStart
 
 ## 环境配置
@@ -12,9 +14,9 @@ pip install -r requirements.txt
 
 需要整理运行代码，构建一个main.py利用参数调控执行到第几个步骤
 
-# 代码笔记
+# 2 代码笔记
 
-## 文件说明
+## 2.1 文件说明
 
 - DM_2024_Dataset：课程组提供数据（具体说明见文件夹内的说明文档）
 - runs：为保证整洁性，将运行全过程生成的中间代码存储在该文件夹中
@@ -27,11 +29,11 @@ pip install -r requirements.txt
 - step2_roadClassify.py：任务二，路段分类代码
 - step3_etaEst.py：任务三，ETA估计代码
 
-## 步骤
+## 2.2 代码说明
 
 ### STEP0 坐标转换
 
-​		利用课程组给的transfer.py实现
+​		利用课程组给出的transfer.py实现
 
 ### STEP1 路网匹配
 
