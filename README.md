@@ -20,9 +20,9 @@ pip install -r requirements.txt
 
 - DM_2024_Dataset：课程组提供数据（具体说明见文件夹内的说明文档）
 - runs：为保证整洁性，将运行全过程生成的中间代码存储在该文件夹中
-  - ori_traj.csv：坐标转换前的traj.csv数据
-  - gcj_traj.csv：坐标转换后的traj.csv数据
-  - matched_points_all.csv：完成STEP1后
+  - ori_xx.csv：坐标转换前的xx.csv数据
+  - gcj_xx.csv：坐标转换后的xx.csv数据
+  - matched_points_xx.csv：完成STEP1后，对xx.csv和road.csv进行匹配后的结果
   - road_filled.csv：完成STEP2后，补全路段分类的数据
 - step0_transfer.py：坐标转换
 - step1_mapMatching.py：任务一，路网匹配代码
@@ -33,7 +33,9 @@ pip install -r requirements.txt
 
 ### STEP0 坐标转换
 
-​		利用课程组给出的transfer.py实现
+​		利用课程组给出的transfer.py进行修改后实现
+
+​		主要修改为：为代码添加了一个参数，该参数可以为"traj"和"eta_task"之一，为"traj"时转换`traj.csv`中的数据，反之转换`eta_task.csv`中的数据
 
 ### STEP1 路网匹配
 

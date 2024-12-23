@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import geopandas as gpd
 from shapely.wkt import loads
@@ -5,6 +6,14 @@ from shapely.ops import nearest_points
 import matplotlib.pyplot as plt
 from tqdm import tqdm  # 添加进度条以跟踪进度
 from rtree import index  # 使用R树索引加速最近邻查找
+
+# 设置命令行参数解析
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('mode', choices=['traj', 'eta_task'], help='Mode of operation')
+args = parser.parse_args()
+
+# 根据模式选择文件名
+file_suffix = 'eta_task' if args.mode == 'eta_task' else 'traj'
 
 # 加载道路网络数据
 df_road = pd.read_csv('./DM_2024_Dataset/road.csv')  # 确保文件路径正确
@@ -17,7 +26,7 @@ gdf_road = gpd.GeoDataFrame(df_road, geometry='geometry')
 gdf_road.set_crs(epsg=4326, inplace=True)  # 假设数据是WGS84坐标系
 
 # 加载轨迹数据（新的格式）
-df_gps = pd.read_csv('./runs/gcj_traj.csv', dtype={'lon': float, 'lat': float, 'id': int})  # 确保文件路径正确
+df_gps = pd.read_csv(f'./runs/gcj_{file_suffix}.csv', dtype={'lon': float, 'lat': float, 'id': int})  # 确保文件路径正确
 
 # 将轨迹数据转换为GeoDataFrame
 gdf_gps = gpd.GeoDataFrame(df_gps, geometry=gpd.points_from_xy(df_gps['lon'], df_gps['lat']))
@@ -50,6 +59,6 @@ for idx, row in tqdm(gdf_gps.iterrows(), total=len(gdf_gps), desc="Matching poin
 df_matched = pd.DataFrame(matched_points)
 
 # 打印结果到CSV文件
-output_csv = './runs/matched_points_all.csv'
+output_csv = f'./runs/matched_points_{file_suffix}.csv'
 df_matched.to_csv(output_csv, index=False)
 print(f"Matched points saved to {output_csv}")
