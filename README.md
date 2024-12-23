@@ -24,6 +24,7 @@ pip install -r requirements.txt
   - gcj_xx.csv：坐标转换后的xx.csv数据
   - matched_points_xx.csv：完成STEP1后，对xx.csv和road.csv进行匹配后的结果
   - road_filled.csv：完成STEP2后，补全路段分类的数据
+  - eta_task_filled.csv：完成STEP3后，不全到达时间的数据
 - step0_transfer.py：坐标转换
 - step1_mapMatching.py：任务一，路网匹配代码
 - step2_roadClassify.py：任务二，路段分类代码
@@ -57,9 +58,16 @@ pip install -r requirements.txt
 
 ## TODO
 
-- [ ] 路网匹配的去噪处理
-- [ ] 路段分类更新数据
-- [ ] 路段分类分类器调研优化
-- [ ] ETA估计预测部分
-- [ ] ETA估计模型优化
+- [ ] 路网匹配
+  - [x] 基本功能实现
+  - [ ] 路网匹配的去噪处理
+- [ ] 路段分类
+  - [x] 基本功能实现
+  - [ ] 路段分类更新数据
+  - [ ] 路段分类分类器调研优化
+- [ ] ETA估计
+  - [x] 基本功能实现
+  - [x] ETA估计预测部分
+  - [ ] ETA估计模型优化
 - [ ] 下一跳预测
+  - [ ] 基本功能实现
