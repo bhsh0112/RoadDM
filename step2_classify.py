@@ -55,4 +55,4 @@ predicted_highway = model.predict(road_data[missing_indices].drop(['highway', 'g
 road_data.loc[missing_indices, 'highway'] = predicted_highway
 
 # 保存结果
-road_data.to_csv('road_filled.csv', index=False)
+road_data.to_csv('./runs/road_filled.csv', index=False)
