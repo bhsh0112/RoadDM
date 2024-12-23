@@ -1,0 +1,8 @@
+pandas
+transbigdata
+geopandas
+shapely
+matplotlib
+tqdm
+rtree
+scikit-learn
