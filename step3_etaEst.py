@@ -33,13 +33,12 @@ traj_data['distance_diff'] = traj_data.groupby('trajectory_id')['coordinates'].a
 # 填充每个轨迹的最后一个一个轨迹点的距离差为0
 traj_data['distance_diff'] = traj_data.groupby('trajectory_id')['distance_diff'].transform(lambda x: x.fillna(0))
 
-#TODO:希望以speed为输出，而非时间差
+#计算速度()
 traj_data['speed'] = traj_data.apply(lambda row: row['distance_diff'] / row['time_diff'] if row['time_diff'] != 0 else 0, axis=1)
 
 # 合并road_data和traj_data，添加road.csv中的特征
 merged_data = pd.merge(match_traj_data, road_data, left_on='matched_road_id', right_on='id', how='left')
 merged_data = pd.merge(merged_data, traj_data, left_on='gps_point_id', right_on='point_id', how='left')
-# print(merged_data.size())
 
 
 # 准备特征和标签
@@ -71,15 +70,7 @@ print(f'Mean Absolute Error: {mae}')
 eta_data=pd.read_csv('./DM_2024_Dataset/eta_task.csv')
 match_eta_data=pd.read_csv('./runs/matched_points_eta_task.csv')
 
-#计算相同轨迹上相邻轨迹点间的距离
-def calculate_distance(coord1, coord2):
-    coord_list = eval(coord1)
-    coord_floats1 = [float(num) for num in coord_list]
-    coord_list = eval(coord2)
-    coord_floats2 = [float(num) for num in coord_list]
-    return ((coord_floats1[0] - coord_floats2[0])**2 + (coord_floats1[1] - coord_floats2[1])**2)**0.5
-def distance_diff(series):
-    return calculate_distance(series.iloc[0], series.iloc[1])
+
 
 eta_data['distance_diff'] = traj_data.groupby('trajectory_id')['coordinates'].apply(distance_diff).bfill()
 # 填充每个轨迹的最后一个一个轨迹点的距离差为0
@@ -87,9 +78,7 @@ eta_data['distance_diff'] = traj_data.groupby('trajectory_id')['distance_diff'].
 
 # 合并road_data和eta_data，添加road.csv中的特征
 merged_data = pd.merge(match_eta_data, road_data, left_on='matched_road_id', right_on='id', how='left')
-print(merged_data)
 merged_data = pd.merge(merged_data, traj_data, left_on='gps_point_id', right_on='point_id', how='left')
-print(merged_data)
 
 #投入预测
 # missing_indices = eta_data['time'].isnull()
@@ -98,7 +87,10 @@ X_all = merged_data[features_to_predict]
 eta_data['predicted_speed'] = model.predict(X_all)
 
 # 计算时间，基于速度和距离差
-eta_data['time_to_travel'] = eta_data.apply(lambda row: row['distance_diff'] / row['predicted_speed'] if row['predicted_speed'] != 0 else 0, axis=1)
+eta_data['time_to_travel'] = eta_data.apply(lambda row: row['distance_diff'] / row['predicted_speed']/60 if row['predicted_speed'] != 0 else 0, axis=1)
+print(eta_data['time_to_travel'])
+print(eta_data['distance_diff'])
+print(eta_data['predicted_speed'])
 
 # 基于第一个点的时间，计算所有点的时间
 eta_data['current_time'] = pd.NaT
@@ -114,11 +106,6 @@ for trajectory_id, group in eta_data.groupby('trajectory_id'):
     # 第一个点的时间设置为原始的'time'
     eta_data.at[first_index, 'current_time'] = eta_data.at[first_index, 'time']
     # 从第二个点开始，时间是前一点的时间加上旅行时间
-    # for i in range(1, len(group)):
-    #     print("success")
-    #     prev_time = eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[i-1]
-    #     time_to_travel = group.iloc[i]['time_to_travel']
-    #     eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[i] = prev_time + pd.to_timedelta(time_to_travel, unit='minutes')
     for i in range(1, len(group)):
         prev_index = eta_data[eta_data['trajectory_id'] == trajectory_id].index[i-1]
         current_index = eta_data[eta_data['trajectory_id'] == trajectory_id].index[i]
@@ -128,9 +115,6 @@ for trajectory_id, group in eta_data.groupby('trajectory_id'):
         time_to_travel_td = pd.to_timedelta(time_to_travel, unit='minutes') if pd.notnull(time_to_travel) else pd.Timedelta(0)
         eta_data.at[current_index, 'current_time'] = prev_time + time_to_travel_td
 
-# 处理第一个点的时间，使其保持原始时间
-# eta_data['current_time'] = eta_data.apply(lambda row: row['time'] if row.name == eta_data.groupby('trajectory_id').apply(lambda g: g.index[0])[row['trajectory_id']] else row['current_time'], axis=1)
-print(eta_data['current_time'])
 eta_data['time'] = eta_data['current_time']
 
 # 将'current_time'列转换为datetime类型
