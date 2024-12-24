@@ -108,17 +108,29 @@ eta_data['time'] = pd.to_datetime(eta_data['time'])
 # )
 for trajectory_id, group in eta_data.groupby('trajectory_id'):
     # 第一个点的时间设置为原始的'time'
-    eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[0] = eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'time'].iloc[0]
+    # eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[0] = eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'time'].iloc[0]
+    # 获取每个轨迹的第一个点的索引
+    first_index = eta_data[eta_data['trajectory_id'] == trajectory_id].index[0]
+    # 第一个点的时间设置为原始的'time'
+    eta_data.at[first_index, 'current_time'] = eta_data.at[first_index, 'time']
     # 从第二个点开始，时间是前一点的时间加上旅行时间
+    # for i in range(1, len(group)):
+    #     print("success")
+    #     prev_time = eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[i-1]
+    #     time_to_travel = group.iloc[i]['time_to_travel']
+    #     eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[i] = prev_time + pd.to_timedelta(time_to_travel, unit='minutes')
     for i in range(1, len(group)):
-        prev_time = eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[i-1]
-        time_to_travel = group.iloc[i]['time_to_travel']
-        eta_data.loc[eta_data['trajectory_id'] == trajectory_id, 'current_time'].iloc[i] = prev_time + pd.to_timedelta(time_to_travel, unit='minutes')
-
+        prev_index = eta_data[eta_data['trajectory_id'] == trajectory_id].index[i-1]
+        current_index = eta_data[eta_data['trajectory_id'] == trajectory_id].index[i]
+        prev_time = eta_data.at[prev_index, 'current_time']
+        time_to_travel = eta_data.at[current_index, 'time_to_travel']
+        # 确保time_to_travel是数值类型，然后将其转换为timedelta
+        time_to_travel_td = pd.to_timedelta(time_to_travel, unit='minutes') if pd.notnull(time_to_travel) else pd.Timedelta(0)
+        eta_data.at[current_index, 'current_time'] = prev_time + time_to_travel_td
 
 # 处理第一个点的时间，使其保持原始时间
 # eta_data['current_time'] = eta_data.apply(lambda row: row['time'] if row.name == eta_data.groupby('trajectory_id').apply(lambda g: g.index[0])[row['trajectory_id']] else row['current_time'], axis=1)
-
+print(eta_data['current_time'])
 eta_data['time'] = eta_data['current_time']
 
 # 将'current_time'列转换为datetime类型
