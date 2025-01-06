@@ -44,7 +44,9 @@ traj_data['speed'] = traj_data.apply(lambda row: row['distance_diff'] / row['tim
 
 # 合并road_data和traj_data，添加road.csv中的特征
 merged_data = pd.merge(match_traj_data, road_data, left_on='matched_road_id', right_on='id', how='left')
+# print(merged_data.shape)
 merged_data = pd.merge(merged_data, traj_data, left_on='gps_point_id', right_on='point_id', how='left')
+# print(merged_data.shape)
 
 
 # 准备特征和标签

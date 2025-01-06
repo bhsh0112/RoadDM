@@ -6,3 +6,4 @@ matplotlib
 tqdm
 rtree
 scikit-learn
+filterpy

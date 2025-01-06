@@ -10,19 +10,61 @@ pip install -r requirements.txt
 
 ## 1.2 代码运行
 
-！！！！TODO！！！！
+如果想要从头到尾运行完整项目，可以直接执行：
 
-需要整理运行代码，构建一个main.py利用参数调控运行哪个具体任务
+```
+bash run.sh
+```
 
-# 2 代码笔记
+这需要一点执行时间
 
-## 2.1 文件说明
+
+
+如果需要单独执行各个任务，代码具体执行方式如下：
+
+### 1.2.1 轨迹坐标转换
+
+```
+python step0_transfer.py --mode xx
+```
+
+参数说明：
+
+- --mode函数指示匹配的模式，可以是traj，指向匹配训练数据，或者eta_task指向任务3所需要的测试数据
+
+### 1.2.2 路网匹配
+
+```
+python step1_mapMatching.py --mode xxx [--denoise]
+```
+
+参数说明：
+
+- --mode函数指示匹配的模式，可以是traj，指向匹配训练数据，或者eta_task指向任务3所需要的测试数据
+- --denoise是一个`store_true`模式的参数，添加后会加入插值去噪处理
+
+### 1.2.3  路段分类
+
+```
+python step2_rodeClassify.py
+```
+
+### 1.2.4 ETA估计
+
+```
+python step3_etaEst.py
+```
+
+
+
+# 2 文件说明
 
 - DM_2024_Dataset：课程组提供数据（具体说明见文件夹内的说明文档）
 - runs：为保证整洁性，将运行全过程生成的中间代码存储在该文件夹中
   - ori_xx.csv：坐标转换前的xx.csv数据
   - gcj_xx.csv：坐标转换后的xx.csv数据
-  - matched_points_xx.csv：完成STEP1后，对xx.csv和road.csv进行匹配后的结果
+  - matched_points_xx.csv：完成STEP1后，不去噪情况下对xx.csv和road.csv进行匹配后的结果
+  - matched_points_den_xx.csv：完成STEP1后，去噪情况下对xx.csv和road.csv进行匹配后的结果
   - road_filled.csv：完成STEP2后，补全路段分类的数据
   - eta_task_filled.csv：完成STEP3后，不全到达时间的数据
 - step0_transfer.py：坐标转换
@@ -30,19 +72,19 @@ pip install -r requirements.txt
 - step2_roadClassify.py：任务二，路段分类代码
 - step3_etaEst.py：任务三，ETA估计代码
 
-## 2.2 代码说明
+# 3 代码笔记
 
-### STEP0 坐标转换
+## STEP0 坐标转换
 
 ​		利用课程组给出的transfer.py进行修改后实现
 
 ​		主要修改为：为代码添加了一个参数，该参数可以为"traj"和"eta_task"之一，为"traj"时转换`traj.csv`中的数据，反之转换`eta_task.csv`中的数据
 
-### STEP1 路网匹配
+## STEP1 路网匹配
 
-### STEP2 路段分类
+## STEP2 路段分类
 
-#### 路段特征处理
+### 路段特征处理
 
 我们选取'tunnel', 'bridge', 'roundabout', 'oneway'，'lanes', 'length', 'maxspeed'以及路段位置信息作为特征，并将上述特征分为两类：①数值型特征，即车道数、路段最大速度等特征；②类别型特征，即是不是桥、是不是隧道等特征。
 
@@ -50,7 +92,7 @@ pip install -r requirements.txt
 
 上述数据处理借用python库scikit-learn的ColumnTransformer实现。
 
-#### 分类器选择
+### 分类器选择
 
 首先，为了更好的对比分类器特性并复习本学期所学内容，对分类器的优缺点做出如下归纳：
 
@@ -80,13 +122,13 @@ pip install -r requirements.txt
 
 综上所述，借助分类器的性质和任务特性，我们可以优先考虑K近邻分类器和随机森林分类器。经实验，最终选择随机森林分类器。
 
-#### 评估分类效果
+### 评估分类效果
 
 对于模型的评估，通过计算测试集中，正确预测路段数和总路段数的比值，得到预测准确率，依次为指标评估分类效果。最终模型的分类准确率为0.83。
 
-### STEP3 ETA估计
+## STEP3 ETA估计
 
-#### 研究出发点
+### 研究出发点
 
 任务目的为对每一个点估计到达时间，但对速度的预测才是本任务的核心预测点，到达时间根据速度计算。
 
@@ -94,7 +136,7 @@ pip install -r requirements.txt
 
 因此，实现本任务的核心思路为，选用随机森林模型作为核心模型，以上述特征为输入，以轨迹点的速度为输出。训练上述模型，以实现对速度的估计，进而利用通过计算得到到达时间。
 
-#### 算法实现
+### 算法实现
 
 具体而言，通过上述分析，我们实际需要预测的标签是速度，这需要我们首先计算同一轨迹中，相邻轨迹点的距离差和时间差，进而计算速度。
 
@@ -104,7 +146,7 @@ pip install -r requirements.txt
 
 在预测阶段，我们同样需要需要做与上面相同的数据处理，在预测得到速度后，我们需要根据轨迹点间的距离差，以及轨迹的起点时间，依次计算得到每一轨迹点的到达时间。
 
-#### 模型评估
+### 模型评估
 
 对于模型评估，我们利用估计时间的MSE作为评估指标，我们所得到的最终MSE为0.0002。
 
