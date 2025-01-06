@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
-
 
 def merge_traj_and_match(traj_file, match_file, output_file):
     traj_data = pd.read_csv(traj_file)
@@ -14,8 +14,7 @@ def merge_traj_and_match(traj_file, match_file, output_file):
 
     traj_data['matched_road_id'] = match_data['matched_road_id']
     traj_data.to_csv(output_file, index=False)
-    print("合并")
-
+    # print("合并")
 
 def add_match_road_id(jump_task_file, matched_points_jump_file, output_file):
     """
@@ -30,10 +29,7 @@ def add_match_road_id(jump_task_file, matched_points_jump_file, output_file):
     for i, row in jump_task.iterrows():
         # 如果是该轨道的终点，match_road_id 留空
         if i == len(jump_task) - 1 or row['trajectory_id'] != jump_task.iloc[i + 1]['trajectory_id']:
-            result_data.append({
-                **row.to_dict(),
-                'matched_road_id': None
-            })
+            continue
         else:
             # 对应 matched_points_jump 中的 road_id
             if matched_points_index < len(matched_points_jump):
@@ -45,12 +41,11 @@ def add_match_road_id(jump_task_file, matched_points_jump_file, output_file):
 
     result_df = pd.DataFrame(result_data)
     result_df.to_csv(output_file, index=False)
-    print("合并")
-
+    # print("合并")
 
 traj_file = './DM_2024_Dataset/traj.csv'
 match_file = './runs/matched_points_traj.csv'
-traj_output_file = './runs/cleaned_new_traj.csv'
+traj_output_file = 'cleaned_new_traj.csv'
 
 jump_task_file = './DM_2024_Dataset/jump_task.csv'
 matched_points_jump_file = './runs/matched_points_jump.csv'
@@ -67,7 +62,13 @@ add_match_road_id(jump_task_file, matched_points_jump_file, jump_output_file)
 traj_task_data = pd.read_csv(traj_output_file)
 jump_task_data = pd.read_csv(jump_output_file)
 
-# 5. 重新推导终点信息
+# 1. 加载数据
+#jump_task_path = 'cleaned_new_jump.csv'  # 替换为清理后文件的实际路径
+#jump_task_data = pd.read_csv(jump_task_path)
+#traj_task_path = 'cleaned_new_traj.csv'
+#traj_task_data = pd.read_csv(traj_task_path)
+
+# 2. 重新推导终点信息
 def add_terminal_points(data):
     """
     推导终点信息，并添加到数据中。
@@ -83,14 +84,14 @@ def add_terminal_points(data):
         terminal_row['matched_road_id'] = terminal_row['matched_road_id']  # 保留原始终点信息
         terminal_rows.append(terminal_row)
 
+    # 合并终点行到数据中
     terminal_df = pd.DataFrame(terminal_rows)
     return terminal_df
 
 # 添加终点信息
-train_terminal_data = add_terminal_points(traj_task_data)
-test_terminal_data = add_terminal_points(jump_task_data)
+terminal_data = add_terminal_points(traj_task_data)
 
-# 6. 构建特征和标签
+# 3. 构建特征和标签
 def build_features_and_labels(data, terminal_data):
     """
     根据每条轨迹的所有非终点点的 road_id 构建特征和分类目标
@@ -116,11 +117,10 @@ def build_features_and_labels(data, terminal_data):
     print(f"特征数量: {len(features)}, 标签数量: {len(labels)}")
     return features, labels
 
-# 提取训练集和测试集的特征和分类目标
-train_features, train_labels = build_features_and_labels(traj_task_data, train_terminal_data)
-test_features, test_labels = build_features_and_labels(jump_task_data, test_terminal_data)
+# 提取训练数据的特征和分类目标
+features, labels = build_features_and_labels(traj_task_data, terminal_data)
 
-# 7. 特征填充或截断为固定长度
+# 4. 特征填充或截断为固定长度
 def encode_features(features, max_length):
     """
     将路段ID序列填充或截断为固定长度
@@ -134,32 +134,57 @@ def encode_features(features, max_length):
         encoded_features.append(encoded)
     return np.array(encoded_features)
 
-# 设置最大序列长度（根据训练集和测试集取最大值）
-max_length = max(max(len(f) for f in train_features), max(len(f) for f in test_features))
+# 设置最大序列长度（轨迹的最长非终点点数量）
+max_length = max(len(f) for f in features)
 
-# 对训练集和测试集的特征进行填充或截断
-X_train = encode_features(train_features, max_length)
-X_test = encode_features(test_features, max_length)
+# 对训练数据的特征进行填充或截断
+X = encode_features(features, max_length)
 
 # 将分类目标（终点的 road_id）转换为整数编码
 label_encoder = LabelEncoder()
-y_train = label_encoder.fit_transform(train_labels)
-y_test = label_encoder.transform(test_labels)
+y = label_encoder.fit_transform(labels)
 
-# 8. 训练分类模型
+# 5. 划分训练集和验证集
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 6. 训练分类模型
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# 9. 验证模型性能
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
+# 验证模型性能
+y_pred = model.predict(X_val)  # 对验证集进行预测
+accuracy = accuracy_score(y_val, y_pred)  # 计算准确率
 print(f"分类模型的准确率: {accuracy:.2f}")
 
-# 10. 保存预测结果
-test_predictions = pd.DataFrame({
-    'trajectory_id': jump_task_data['trajectory_id'].unique(),
-    'true_road_id': label_encoder.inverse_transform(y_test),
-    'predicted_road_id': label_encoder.inverse_transform(y_pred)
-})
-test_predictions.to_csv('./runs/jump_task_predictions.csv', index=False)
+# 7. 对测试集进行预测
+def predict_jump_task(data, terminal_data, model, label_encoder, max_length):
+    """
+    对 jump_task.csv 进行预测，输出每条轨迹的终点 road_id
+    """
+    results = []
+    grouped = data.groupby('trajectory_id')
+
+    for trajectory_id, group in grouped:
+        road_ids = group['matched_road_id'].tolist()
+        if len(road_ids) < 2:  # 如果轨迹点不足 2 个，跳过
+            continue
+
+        # 构建特征矩阵（所有非终点点）
+        non_terminal_points = road_ids[:-1]
+        test_feature = encode_features([non_terminal_points], max_length)
+
+        # 使用模型预测终点的分类标签
+        predicted_class = model.predict(test_feature)
+        predicted_road_id = label_encoder.inverse_transform(predicted_class)[0]
+
+        # 保存预测结果
+        results.append({'trajectory_id': trajectory_id, 'predicted_road_id': predicted_road_id})
+
+    return pd.DataFrame(results)
+
+# 对测试集进行预测
+test_results = predict_jump_task(jump_task_data, terminal_data, model, label_encoder, max_length)
+
+# 8. 保存预测结果到 CSV 文件
+test_results.to_csv('jump_task_predictions.csv', index=False)
 print("预测完成，结果已保存至 jump_task_predictions.csv")
