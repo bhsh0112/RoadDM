@@ -17,7 +17,7 @@ parser.add_argument('--denoise', action='store_true', help='Enable denoising')
 args = parser.parse_args()
 
 # 根据模式选择文件名
-denoise = True if args.mode else false
+denoise = True if args.mode else False
 file_suffix = 'eta_task' if args.mode == 'eta_task' else 'traj'
 
 

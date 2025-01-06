@@ -10,18 +10,6 @@ pip install -r requirements.txt
 
 ## 1.2 代码运行
 
-如果想要从头到尾运行完整项目，可以直接执行：
-
-```
-bash run.sh
-```
-
-这需要一点执行时间
-
-
-
-如果需要单独执行各个任务，代码具体执行方式如下：
-
 ### 1.2.1 轨迹坐标转换
 
 ```
@@ -55,6 +43,13 @@ python step2_rodeClassify.py
 python step3_etaEst.py
 ```
 
+### 1.2.5 下一跳预测
+
+```
+python step4_mapMatching.py
+python step4_prediction.py
+```
+
 
 
 # 2 文件说明
@@ -71,6 +66,8 @@ python step3_etaEst.py
 - step1_mapMatching.py：任务一，路网匹配代码
 - step2_roadClassify.py：任务二，路段分类代码
 - step3_etaEst.py：任务三，ETA估计代码
+- step4_mapMatching：任务四，测试集的路网匹配
+- Step4_prediction：任务四，下一跳预测
 
 # 3 代码笔记
 

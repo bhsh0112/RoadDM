@@ -6,7 +6,7 @@ import os
 
 # 设置命令行参数解析
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--mode', choices=['traj', 'eta_task'], help='Mode of operation')
+parser.add_argument('--mode', choices=['traj', 'eta_task', 'jump_task'], help='Mode of operation')
 args = parser.parse_args()
 
 # 根据模式选择文件名
