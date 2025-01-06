@@ -17,6 +17,12 @@ traj_data['time_diff'] = traj_data.groupby('trajectory_id')['time'].diff().dt.to
 # 填充每个轨迹的最后一个一个轨迹点的时间差为0
 traj_data['time_diff'] = traj_data.groupby('trajectory_id')['time_diff'].transform(lambda x: x.fillna(0))
 
+#计算轨迹数量
+# # 计算每个路段的轨迹数量并添加到路段数据
+# road_trajectory_count = match_traj_data.groupby('matched_road_id')['trajectory_id'].nunique().reset_index()
+# road_trajectory_count.columns = ['matched_road_id', 'trajectory_count']
+# road_data = pd.merge(road_data, road_trajectory_count, left_on='id', right_on='matched_road_id', how='left')
+
 
 
 # 计算相同轨迹上相邻轨迹点的距离差
