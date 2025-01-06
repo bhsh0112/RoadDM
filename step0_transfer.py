@@ -10,7 +10,7 @@ parser.add_argument('--mode', choices=['traj', 'eta_task', 'jump_task'], help='M
 args = parser.parse_args()
 
 # 根据模式选择文件名
-file_suffix = 'eta_task' if args.mode == 'eta_task' else 'traj'
+file_suffix = args.mode
 
 traj_df = pd.read_csv(f'./DM_2024_Dataset/{file_suffix}.csv')
 traj_df['lon'] = traj_df['coordinates'].apply(lambda coord: ast.literal_eval(coord)[0])

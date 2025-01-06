@@ -46,6 +46,7 @@ python step3_etaEst.py
 ### 1.2.5 下一跳预测
 
 ```
+python step4_transfer_jump.py
 python step4_mapMatching.py
 python step4_prediction.py
 ```
